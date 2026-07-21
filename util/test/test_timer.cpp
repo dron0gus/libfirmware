@@ -27,10 +27,9 @@ TEST(util, timerResetStampedInTheFuture) {
 	// getElapsedNt() has a negative-delta guard and correctly clamps to zero
 	EXPECT_EQ(0u, timer.getElapsedNt(nowNt));
 
-	// hasElapsedUs() lacks that guard: static_cast<uint32_t>(negative delta) wraps to
-	// ~4.29e9 ticks, so a freshly-reset timer reports ANY threshold as elapsed.
-	// This assertion documents the DEFECT: the fix must flip it to EXPECT_FALSE.
-	EXPECT_TRUE(timer.hasElapsedMs(250)) << "negative-delta guard is in place, flip this assertion to EXPECT_FALSE";
+	// hasElapsedUs() must not wrap the negative delta into "elapsed": a freshly-reset
+	// timer has not elapsed, no matter which side of the reset "now" was sampled on
+	EXPECT_FALSE(timer.hasElapsedMs(250));
 
 	setTimeNowNt(0);
 }

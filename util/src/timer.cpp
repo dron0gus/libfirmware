@@ -30,6 +30,13 @@ bool Timer::hasElapsedUs(float const microseconds) const {
 
 	efitick_t const delta{ getTimeNowNt() - m_lastReset };
 
+	// See getElapsedNt(): a lucky interrupt between the getTimeNowNt() sample above and the
+	// m_lastReset load can reset the timer into "the future", making the delta negative.
+	// Without this guard the static_cast<uint32_t> below wraps that into "elapsed".
+	if (delta < 0) {
+		return false;
+	}
+
 	// If larger than 32 bits, timer has certainly expired
 	if (delta >= UINT32_MAX) {
 		return true;
